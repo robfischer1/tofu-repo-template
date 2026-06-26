@@ -43,6 +43,16 @@ star_namespace:
   help: "Sovereign namespace this substrate owns (no shared tables across stars)"
   default: "{{ service_name | replace('-', '_') }}"
 
+interface_protocol:
+  type: str
+  help: "The substrate's primary sync wire (postgres | redpanda | http | tcp) — satisfies Reachability"
+  default: "{{ substrate_kind or 'tcp' }}"
+
+interstellar:
+  type: bool
+  help: "Produces/consumes Kafka events? Adds async = [\"kafka\"] to the manifest."
+  default: false
+
 docker_host:
   type: str
   help: "Docker daemon endpoint Tofu provisions against (the nas01 host)"
