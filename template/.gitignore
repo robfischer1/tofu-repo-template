@@ -1,0 +1,21 @@
+# OpenTofu / Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!example.tfvars
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Local env / secrets
+.env
+.env.*
+
+# furnace deploy manifest — local deploy state, regenerated on each deploy
+.furnace/deployed.json
+
+# Agent worktrees — ephemeral isolation scratch
+.claude/worktrees/

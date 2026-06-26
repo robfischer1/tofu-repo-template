@@ -1,0 +1,14 @@
+# {{ project_name }} — runtime substrate, deployed via Nereus (kreuzwerker/docker).
+# The feature build (spec-kit inner loop) authors the real resources below.
+#
+# Skeleton — replace in the feature implementation:
+#
+# resource "docker_image" "{{ service_name | replace('-', '_') }}" {
+#   name = "REGISTRY/IMAGE:TAG"
+# }
+#
+# resource "docker_container" "{{ service_name | replace('-', '_') }}" {
+#   name    = "{{ service_name }}"
+#   image   = docker_image.{{ service_name | replace('-', '_') }}.image_id
+#   restart = "unless-stopped"
+# }

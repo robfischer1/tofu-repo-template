@@ -1,0 +1,93 @@
+# Tofu-repo copier template — stamps a Forge OpenTofu/IaC *substrate star*: a thin
+# per-substrate repo whose runtime is declared as `kreuzwerker/docker` resources
+# and deployed via Nereus, never hand-composed. Sibling of python-repo-template;
+# same governance + spec-kit spine, a Tofu body instead of Python. copier lays the
+# repo body; the final `_task`s run `specify init` (the SDD scaffold) then
+# `furnace ignite --kit code-repo-sdd` (the governance kit) so the repo is born
+# spec-kit-ready and governed. No uv/pyproject/pre-commit — there is no Python env.
+
+_subdirectory: template
+_min_copier_version: "9.0.0"
+
+project_name:
+  type: str
+  help: Human-readable project name (e.g. "Chronos")
+
+service_name:
+  type: str
+  help: Distribution / repo / image name (kebab-case)
+  default: "{{ project_name | lower | replace(' ', '-') | replace('_', '-') }}"
+
+description:
+  type: str
+  help: One-line repo description
+  default: A Forge OpenTofu substrate repo, deployed via Nereus.
+
+charter:
+  type: str
+  help: "The star's single-responsibility charter (<= 100 chars) — the SRP gate"
+  default: "{{ description }}"
+
+cluster:
+  type: str
+  help: Constellation cluster this star belongs to
+  default: pantheon
+
+substrate_kind:
+  type: str
+  help: "Substrate engine kind (e.g. postgres, redpanda) — empty if none"
+  default: ""
+
+star_namespace:
+  type: str
+  help: "Sovereign namespace this substrate owns (no shared tables across stars)"
+  default: "{{ service_name | replace('-', '_') }}"
+
+docker_host:
+  type: str
+  help: "Docker daemon endpoint Tofu provisions against (the nas01 host)"
+  default: "ssh://rob@nas01"
+
+author_name:
+  type: str
+  help: Copyright holder / author
+  default: Rob Fischer
+
+year:
+  type: int
+  help: Copyright year
+  default: 2026
+
+# Init-only setup, run by `copier copy --trust` (gated to copy, skipped on
+# `copier update`). Mirrors the python template's spine, minus the Python steps.
+_tasks:
+  - command: git init -q
+    when: "{{ _copier_operation == 'copy' }}"
+  # Forgejo is git-primary (origin); GitHub is the push-mirror. The remote repo
+  # must be created on Forgejo first (push-to-create is disabled instance-wide);
+  # these only wire the local remotes to the convention.
+  - command: git remote add origin https://forgejo.notusmi.com/rob/{{ service_name }}.git
+    when: "{{ _copier_operation == 'copy' }}"
+  - command: git remote add github https://github.com/robfischer1/{{ service_name }}.git
+    when: "{{ _copier_operation == 'copy' }}"
+  # Language-agnostic secret baseline (no enforcing pre-commit hook — there is no
+  # Python env to run it; secret-scanning is enforced in CI instead).
+  - command: uvx detect-secrets@1.5.0 scan > .secrets.baseline
+    when: "{{ _copier_operation == 'copy' }}"
+  # Spec-Driven Development scaffold. `git init -q` above is load-bearing (spec-kit
+  # no longer git-inits since 0.10.0). `specify` must be on PATH.
+  - command: specify init --here --force --integration claude --script ps --ignore-agent-tools
+    when: "{{ _copier_operation == 'copy' }}"
+  # Cede CLAUDE.md to furnace (the <!-- SPECKIT --> agent-context extension fights
+  # furnace's CLAUDE.md @AGENTS.md shim). Deprecated upstream; disable now.
+  - command: specify extension disable agent-context
+    when: "{{ _copier_operation == 'copy' }}"
+  # Pour the furnace governance kit (the .claude/ AI layer) last. code-repo-sdd =
+  # code-repo + the speckit surface (.specify/ overrides + the speckit-plan command
+  # override + /execute). Must run AFTER `specify init` so the override wins as last
+  # writer. Needs `furnace` on PATH + $FURNACE_SOURCE set.
+  - command: furnace ignite . --kit code-repo-sdd
+    when: "{{ _copier_operation == 'copy' }}"
+  # Verify the plan-command override resolves as the project-tier winner.
+  - command: specify preset resolve speckit.plan
+    when: "{{ _copier_operation == 'copy' }}"

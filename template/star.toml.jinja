@@ -1,0 +1,18 @@
+# Star manifest — the conformance target every gate reads.
+# Canonical schema: the `constellation` StarManifest (pydantic). This is a
+# substrate star; the feature build fills the real interface/seams against M1.
+name = "{{ service_name }}"
+service = "{{ service_name }}"
+cluster = "{{ cluster }}"
+charter = "{{ charter }}"
+
+[substrate]
+kind = "{{ substrate_kind }}"
+namespace = "{{ star_namespace }}"
+
+[interface]
+# Reachability invariant: len(sync) + len(async) >= 1.
+# Fill the substrate's real wire interface in the feature implementation
+# (e.g. async = ["kafka"] for a broker, sync = ["postgres"] for an engine).
+sync = []
+async = []

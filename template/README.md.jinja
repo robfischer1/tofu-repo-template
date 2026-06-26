@@ -1,0 +1,27 @@
+# {{ project_name }}
+
+{{ description }}
+
+A Forge **substrate star** — a thin per-substrate repo whose runtime is declared
+as `kreuzwerker/docker` resources and deployed through **Nereus** (OpenTofu),
+never hand-composed. Health is judged by **Nyx**, so this layer stays dumb.
+
+## Layout
+
+| File | Role |
+| :-- | :-- |
+| `star.toml` | the star manifest (identity, tier, seams) |
+| `versions.tf` | Tofu + provider pins (`kreuzwerker/docker`) |
+| `providers.tf` | docker daemon connection (`var.docker_host`) |
+| `variables.tf` | inputs (the nas01 daemon endpoint) |
+| `main.tf` | the runtime resources (authored per feature) |
+
+## Deploy
+
+```bash
+tofu init
+tofu plan      # show drift
+tofu apply     # place containers on nas01
+```
+
+State lives in the shared Nereus PG backend, not here.
