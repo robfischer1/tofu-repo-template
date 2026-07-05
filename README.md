@@ -1,5 +1,18 @@
 # tofu-repo-template
 
+> **DEPRECATED (Smaller Hammers F8, 2026-07-05).** A substrate star no longer
+> needs a separate template: the decentralization refactor gave every star
+> (`python-repo-template`, `decentralized: true`) its own `/infra` scaffolded
+> from the shared foundry `star` module. A substrate star is that same `/infra`
+> shape — the broker/registry declared through the `star` module's `db`/`stores`/
+> `extras` inputs (see the Pontus child design). Do NOT stamp new substrate stars
+> from here; use `python-repo-template`. Retained read-only as the prior-art
+> reference until the last substrate star (Pontus) adopts its per-repo `/infra`.
+
+---
+
+# tofu-repo-template
+
 A [copier](https://copier.readthedocs.io) template that stamps a Forge **OpenTofu
 substrate star** — a thin per-substrate repo whose runtime is declared as
 `kreuzwerker/docker` resources and deployed through **Nereus** (OpenTofu), never
