@@ -32,3 +32,20 @@ exports = ["metrics"]
 bundle = "oci://forgejo.notusmi.com/furnace/policy"
 tag    = "policy-v2"
 digest = "sha256:3bbda32ae49601b974d87f80e682e56cac442f77f8f5e6ae46bb3bb57ead2a2f"
+
+# [operable] — the star's declared controllable surface (Argus). Opt-in: uncomment
+# to declare. Two halves, two owners: the SURFACE (verb `name` + arg `schema`) is
+# machine-introspected and re-derived on anneal; your CURATION (`kind`/`group`/
+# `danger`/`widget`/`label`) is preserved across re-derivation, joined by name.
+# `kind` is one of read | setting | op. `danger` is a hint — star hints, Ouranos rules.
+#
+# [operable]
+# schema = 1
+#
+# [[operable.verb]]
+# name   = "example_ping"
+# kind   = "read"
+# group  = "health"
+# danger = false
+# widget = ""
+# label  = "Ping"
