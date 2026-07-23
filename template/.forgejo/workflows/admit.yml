@@ -28,9 +28,9 @@ jobs:
     name: Admission gate
     runs-on: nas01
     container:
-      image: catthehacker/ubuntu:act-22.04
+      image: catthehacker/ubuntu:act-22.04@sha256:aeaa74e62723c9538ed865e2de82617bb8c2e2c84ef36f8ba150a9dbb7ad39a3
     steps:
-      - uses: https://github.com/actions/checkout@v4
+      - uses: https://github.com/actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Install uv
         env:
