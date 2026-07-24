@@ -66,18 +66,37 @@ The Forgejo remotes in steps 2–3 assume the repo already exists on Forgejo
 
 | File | Role |
 | :-- | :-- |
-| `star.toml` | the star manifest (identity, tier, seams) — conforms to the `constellation` StarManifest |
+| `star.toml` | the star manifest (identity, tier, seams; optional commented-out `[operable]` curation stub) — conforms to the schema `stellar_core`'s `build_admission_input` builds and `ouranos`'s rego policy validates (`rob/constellation`, the prior schema authority, is archived) |
 | `versions.tf` | Tofu + provider pins (`kreuzwerker/docker`) |
 | `providers.tf` | docker daemon connection (`var.docker_host`) |
 | `variables.tf` | inputs (the nas01 daemon endpoint) |
 | `main.tf` | the runtime resources (authored per feature via spec-kit) — starts as a commented skeleton |
-| `.forgejo/workflows/admit.yml` | fail-closed admission gate: pulls + cosign-verifies the pinned policy bundle, checks supply-chain attestation, runs `constellation.gate` + `conftest` against `star.toml` |
+| `.forgejo/workflows/admit.yml` | thin caller (`uses: foundry/foundry-stocks/.forgejo/workflows/admit.yml@main`) — the fail-closed admission logic (policy-bundle pull + cosign verify, supply-chain attestation, schema conformance) lives in that reusable workflow, not inlined here |
+| `.gitignore` | the one file `copier update` actually 3-way-merges — every other rendered path is create-if-absent or foundry-anneal-owned (see "Updating a stamped repo" below) |
 | `LICENSE` | Apache-2.0, stamped with `author_name` / `year` |
 | `.specify/` + `.claude/` | spec-kit scaffold + furnace governance (poured by the `_tasks`, not by copier's file rendering) |
 
 `main.tf` is intentionally a skeleton — the actual `docker_image` /
 `docker_container` resources are authored per-feature via the spec-kit inner
 loop (`/execute` on the master-plan for the new star), not by this template.
+
+## Updating a stamped repo
+
+`copier update` re-renders `template/` against a newer version of this
+template and merges into the target repo per `_skip_if_exists` (Flame C1;
+see `copier.yml`):
+
+- **create-if-absent** — `README.md`, `LICENSE`, `main.tf`, `variables.tf`,
+  `providers.tf`, `versions.tf`, `star.toml`: star-owned once born, copier
+  never clobbers an existing one.
+- **3-way merge** — `.gitignore`: the one real seam.
+- **skipped here, clobbered by anneal** — `.forgejo/**`: the foundry
+  conformance surface is enforced by hephaestus anneal (C2) from a fresh
+  render, not merged by copier.
+
+`_tasks` (the numbered list above) never re-run on `copier update` — every
+one is gated `when: "{{ _copier_operation == 'copy' }}"`, so they only fire
+on the first `copier copy`.
 
 ## Development (on this template repo)
 

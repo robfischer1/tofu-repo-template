@@ -27,19 +27,24 @@ copier.yml                              # questions + defaults + _tasks (the who
 template/                               # _subdirectory root — rendered into the new repo
 ├── star.toml.jinja                     # star manifest: identity/cluster/charter, [substrate],
 │                                        #   [logic] entrypoint=main.tf, [interface] sync/async,
-│                                        #   [observability] exports, [governance] policy bundle pin
+│                                        #   [observability] exports, [governance] policy bundle pin,
+│                                        #   optional [operable] curation stub (Argus F1, commented out)
 ├── versions.tf                         # Tofu >=1.8.0 + kreuzwerker/docker ~> 3.0 pin (NOT templated)
 ├── providers.tf                        # provider "docker" { host = var.docker_host } (NOT templated)
 ├── variables.tf.jinja                  # var.docker_host, default from the docker_host answer
 ├── main.tf.jinja                       # commented skeleton only — real docker_image/docker_container
 │                                        #   resources are authored later, per-feature, via spec-kit
+├── .gitignore                          # NOT templated — the one file `copier update` 3-way-merges
+│                                        #   (Flame C1); everything else here is create-if-absent
+│                                        #   (star-owned) or anneal-clobbered, never merged
 ├── README.md.jinja                     # the README the STAMPED repo gets (contains live Jinja —
 │                                        #   do not "fix" its {{ }} placeholders, they're intentional)
 ├── LICENSE.jinja                       # Apache-2.0, stamped with author_name/year
 ├── {{_copier_conf.answers_file}}.jinja # renders to .copier-answers.yml in the stamped repo —
 │                                        #   copier's own answers record, used by `copier update`
-└── .forgejo/workflows/admit.yml        # NOT templated (no Jinja) — fail-closed admission gate,
-                                         #   baked in verbatim, runs on every PR in the stamped repo
+└── .forgejo/workflows/admit.yml        # NOT templated (no Jinja) — thin caller stub to the
+                                         #   foundry/foundry-stocks reusable admit workflow (not an
+                                         #   inline gate); runs on every PR in the stamped repo
 ```
 
 No `src/`, no tests, no CI in *this* repo (a template has nothing to unit
@@ -106,9 +111,26 @@ rendered `README.md.jinja`.
   not something to hand-edit here casually — check `copier.yml`'s git log
   for why the default digest was corrected (`fix: default [governance] pin
   to the real policy-v2 bundle`) before changing it again.
-- `admit.yml` requires `[governance].digest` to be non-empty in `star.toml`
-  or the "Pull and verify policy bundle" step fails closed — this is
-  deliberate (fail-closed admission), not a bug to relax.
+- `admit.yml` is a thin caller (`uses: foundry/foundry-stocks/.forgejo/
+  workflows/admit.yml@main`) — the pull-and-verify-policy-bundle logic lives
+  in that reusable workflow, not inlined here. It still requires
+  `[governance].digest` to be non-empty in `star.toml` or the gate fails
+  closed — deliberate (fail-closed admission), not a bug to relax. The prior
+  ~180-line inline gate (against `rob/constellation`, now archived) was
+  replaced 2026-07-23 (`cfca7fbe`) because it only worked via a dead 301
+  redirect.
+- `_skip_if_exists` in `copier.yml` (Flame C1) governs `copier update`
+  behavior: docs + the star's own Tofu files + `star.toml` are
+  create-if-absent (star-owned once born, never re-clobbered); `.gitignore`
+  is the one real 3-way-merge seam; `.forgejo/**` is skipped here and
+  clobbered instead by hephaestus anneal (C2) from a fresh render — a
+  conformance surface is enforced, not merged.
+- `star.toml.jinja`'s `[operable]` block (Argus F1) is an opt-in,
+  commented-out stub — uncomment and fill in `[[operable.verb]]` entries to
+  declare the star's controllable surface. Two owners: the verb
+  `name`/`schema` half is machine-introspected and re-derived on anneal; the
+  `kind`/`group`/`danger`/`widget`/`label` curation half is author-owned and
+  preserved across re-derivation (joined by name).
 - Nyx (not Tofu) judges runtime health — `providers.tf` and `main.tf.jinja`
   both note the Tofu layer stays "deliberately dumb" (place containers only,
   no health logic).
@@ -125,9 +147,15 @@ rendered `README.md.jinja`.
   + spec-kit spine, referenced by name in both `README.md` and `copier.yml`'s
   header comment. Not present in this worktree; consult it directly for the
   Python-side equivalent of any convention here.
-- `constellation` — supplies the `StarManifest` schema `star.toml` conforms
-  to, and the `constellation.gate` module `admit.yml` runs (pinned via
-  `CONSTELLATION_REF` in that workflow).
+- `rob/constellation` — **archived** (2026-07-23); no longer supplies
+  anything live. `star.toml`'s schema authority is now `stellar_core`
+  (`build_admission_input`) + the `ouranos` rego policy, and `admit.yml`
+  calls the `foundry/foundry-stocks` reusable workflow instead of the old
+  inline `constellation.gate` (which only worked via a dead 301 redirect) —
+  see commits `81ab7dee` / `cfca7fbe`.
+- `foundry/foundry-stocks` — supplies the reusable
+  `.forgejo/workflows/admit.yml` this template's own `admit.yml` calls
+  (`uses: foundry/foundry-stocks/.forgejo/workflows/admit.yml@main`).
 - `furnace` — supplies the `code-repo-sdd` governance kit poured by `_task`
   7 (`furnace ignite`).
 - **Nereus** — the OpenTofu deployment layer that actually applies the
