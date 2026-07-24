@@ -7,6 +7,27 @@
 # spec-kit-ready and governed. No uv/pyproject/pre-commit — there is no Python env.
 
 _subdirectory: template
+
+# `_skip_if_exists` = every rendered path EXCEPT the seam (.gitignore). A tofu
+# repo is DIFFERENT from an app-service star: its `.tf` files (main/variables/
+# providers/versions) are the star's OWN infrastructure logic — never-touch, not
+# a dep-manifest seam — and star.toml is hephaestus-derived. So copier only
+# 3-way-merges .gitignore; everything else is create-if-absent (docs) or
+# skipped-here-clobbered-by-anneal (the CI). RENDERED paths (template/ + .jinja
+# stripped). PROVISIONAL: providers.tf/versions.tf ownership (foundry-clobber vs
+# star-pin) is deferred to C2/ownership.py; skip is the safe default. Kept in
+# sync with hephaestus `ownership.py`'s non-seam set (Flame C1).
+_skip_if_exists:
+  # star-owned: docs (create-if-absent) + the star's own tofu logic (never-touch)
+  - README.md
+  - LICENSE
+  - main.tf
+  - variables.tf
+  - providers.tf
+  - versions.tf
+  - star.toml
+  # foundry conformance: skipped here, clobbered by anneal (C2)
+  - .forgejo/**
 _min_copier_version: "9.0.0"
 
 project_name:
