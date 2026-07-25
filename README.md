@@ -33,17 +33,37 @@ renders `template/` into the new repo, then runs the `_tasks` (copy-only,
 skipped on `copier update`):
 
 1. `git init -q`
-2. `git remote add origin https://forgejo.notusmi.com/rob/<service_name>.git`
-3. `git remote add github https://github.com/robfischer1/<service_name>.git`
-4. `uvx detect-secrets@1.5.0 scan > .secrets.baseline`
-5. `specify init --here --force --integration claude --script ps --ignore-agent-tools` — the spec-kit SDD scaffold
-6. `specify extension disable agent-context` — cedes `CLAUDE.md` to furnace instead of spec-kit's agent-context extension
-7. `furnace ignite . --kit code-repo-sdd` — pours the furnace governance kit (`.claude/` AI layer)
-8. `specify preset resolve speckit.plan` — verifies the plan-command override won
+2. `git remote add origin https://git.notusmi.com/<service_name>.git` — the **Ourea door** (bare repo name, no `rob/` prefix)
+3. `git remote add forgejo https://forgejo.notusmi.com/rob/<service_name>.git` + `git remote set-url --push forgejo no_push_f27` — **fetch only**
+4. `git remote add github https://github.com/robfischer1/<service_name>.git` — push mirror
+5. `uvx detect-secrets@1.5.0 scan > .secrets.baseline`
+6. `specify init --here --force --integration claude --script ps --ignore-agent-tools` — the spec-kit SDD scaffold
+7. `specify extension disable agent-context` — cedes `CLAUDE.md` to furnace instead of spec-kit's agent-context extension
+8. `furnace ignite . --kit code-repo-sdd` — pours the furnace governance kit (`.claude/` AI layer)
+9. `specify preset resolve speckit.plan` — verifies the plan-command override won
 
-Steps 5–8 require `specify` and `furnace` on `PATH` and `$FURNACE_SOURCE` set.
-The Forgejo remotes in steps 2–3 assume the repo already exists on Forgejo
-(push-to-create is disabled instance-wide) — create it there first.
+Steps 6–9 require `specify` and `furnace` on `PATH` and `$FURNACE_SOURCE` set.
+
+The remote wiring is the post-F27 convention: `origin` is the Ourea door, the
+authoritative git gateway that gates landings via `Serves`. Forgejo stays as a
+fetch-only remote with its push side disabled by the `no_push_f27` sentinel, so
+a stray `git push forgejo` fails loudly rather than silently bypassing the gate.
+Steps 2–4 only wire local remotes — the repo must already exist on Forgejo
+(push-to-create is disabled instance-wide), so create it there first.
+
+## Development (of the template itself)
+
+Every PR renders the matrix in `ci-matrix.toml` through the canonical
+`template-ci.yml` in `foundry/foundry-stocks`: each case renders, its expected
+file set is asserted, and every rendered `.toml`/`.json` is parsed. This
+template has no conditional paths, so that last part — `star.toml` parsing under
+both an empty and a populated `substrate_kind` — is the gate that matters.
+
+Reproduce it locally:
+
+```bash
+python3 /path/to/foundry-stocks/ci/lib/template_render_matrix.py --template .
+```
 
 ## Copier questions
 
