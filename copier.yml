@@ -94,10 +94,22 @@ year:
 _tasks:
   - command: git init -q
     when: "{{ _copier_operation == 'copy' }}"
-  # Forgejo is git-primary (origin); GitHub is the push-mirror. The remote repo
-  # must be created on Forgejo first (push-to-create is disabled instance-wide);
-  # these only wire the local remotes to the convention.
-  - command: git remote add origin https://forgejo.notusmi.com/rob/{{ service_name }}.git
+  # Remotes follow the post-F27 fleet convention: ORIGIN IS THE OUREA DOOR, not
+  # Forgejo. The door is the authoritative git-remote gateway (it serves real
+  # fetch/pull since 2026-07-19 and gates landings via Serves); Forgejo stays a
+  # FETCH-ONLY remote with its push side disabled by the `no_push_f27` sentinel,
+  # so a stray `git push forgejo` fails loudly instead of bypassing the gate.
+  # GitHub remains the push-mirror. NOTE the door path takes a BARE repo name
+  # (no `rob/` prefix), unlike Forgejo; `git.notusmi.com` is the door's canonical
+  # hostname (HTTPS, and it survives an address change, unlike the raw :8215
+  # tailnet address).
+  # The remote repo must be created on Forgejo first (push-to-create is disabled
+  # instance-wide); these only wire the local remotes to the convention.
+  - command: git remote add origin https://git.notusmi.com/{{ service_name }}.git
+    when: "{{ _copier_operation == 'copy' }}"
+  - command: git remote add forgejo https://forgejo.notusmi.com/rob/{{ service_name }}.git
+    when: "{{ _copier_operation == 'copy' }}"
+  - command: git remote set-url --push forgejo no_push_f27
     when: "{{ _copier_operation == 'copy' }}"
   - command: git remote add github https://github.com/robfischer1/{{ service_name }}.git
     when: "{{ _copier_operation == 'copy' }}"
