@@ -1,0 +1,30 @@
+# ci-matrix.toml — this template's render matrix. THE ONLY THING THIS REPO OWNS
+# ABOUT ITS OWN CI: the gate logic is generic and lives once, in
+# foundry-stocks/ci/lib/template_render_matrix.py, called through the
+# `template-ci.yml` reusable workflow. Variance is data; adding a variant is a
+# TOML edit, never a workflow edit.
+#
+# This template has NO conditional paths — every case renders the same ten files
+# — so tier 1 here is a smoke test and tier 2 is the real gate: `star.toml` is
+# the star's manifest, `substrate_kind` and `interface_protocol` render into it,
+# and a malformed one is a repo that cannot be admitted. Two cases because the
+# empty `substrate_kind` default and a populated one take different jinja
+# branches into that manifest.
+parse = ["**/*.toml", "**/*.json"]
+
+[[case]]
+name = "default"
+answers = { project_name = "Gate Tf" }
+present = [
+  "main.tf",
+  "variables.tf",
+  "providers.tf",
+  "versions.tf",
+  "star.toml",
+  ".forgejo/workflows/admit.yml",
+]
+
+[[case]]
+name = "substrate"
+answers = { project_name = "Gate Tf", substrate_kind = "postgres", interstellar = true }
+present = ["star.toml", "main.tf", ".forgejo/workflows/admit.yml"]
