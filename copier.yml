@@ -56,7 +56,14 @@ cluster:
 
 substrate_kind:
   type: str
-  help: "Substrate engine kind (e.g. postgres, redpanda) — empty if none"
+  help: "Substrate engine/kind — the upstream image this substrate star runs (sets star.toml [substrate].kind). 'none' for a non-substrate star."
+  choices:
+    "none (not a substrate star)": ""
+    postgres: postgres
+    pgvector: pgvector
+    redpanda: redpanda
+    otelcol: otelcol
+    opa: opa
   default: ""
 
 star_namespace:
