@@ -4,7 +4,10 @@
 # same governance + spec-kit spine, a Tofu body instead of Python. copier lays the
 # repo body; the final `_task`s run `specify init` (the SDD scaffold) then
 # `furnace ignite --kit code-repo-sdd` (the governance kit) so the repo is born
-# spec-kit-ready and governed. No uv/pyproject/pre-commit — there is no Python env.
+# spec-kit-ready and governed. The STAMPED repo has no uv/pyproject and no Python
+# env; THIS repo carries a .pre-commit-config.yaml of its own as of 2026-08-12 —
+# see README "Development (on this template repo)". The distinction is the whole
+# point: every template here gated its children and never itself.
 
 _subdirectory: template
 
@@ -26,6 +29,23 @@ _skip_if_exists:
   - providers.tf
   - versions.tf
   - star.toml
+  # THE LAST TWO MERGED PATHS, CLOSED 2026-08-12. main.tf and its siblings were
+  # already skipped, so this template's dependency manifest was never the exposure
+  # the other four had — but .gitignore and cliff.toml were still 3-way MERGED.
+  #
+  # .gitignore is CONSUMER-CUSTOMISED, and that is not hypothetical: a frontend
+  # star was measured about to lose nine local lines on an update, among them the
+  # furnace-provisioned ignores and a `!tools/parity/fixtures/**` negation whose
+  # own comment records it fixing a CI outage on fresh checkouts. cliff.toml is
+  # template-owned conformance and takes the anneal route with its neighbours.
+  #
+  # Walking template/ now leaves .copier-answers.yml as the only unskipped
+  # rendered path, and copier owns that one — it is how the pin advances. A change
+  # to anything else reaches only NEW stamps unless it ships with a versioned
+  # `_migrations` entry at the `after` stage (the only stage that runs once copier
+  # has reapplied its diff; a `_task` runs before it and is overwritten).
+  - .gitignore
+  - cliff.toml
   # foundry conformance: skipped here, clobbered by anneal (C2)
   - .forgejo/**
 _min_copier_version: "9.0.0"

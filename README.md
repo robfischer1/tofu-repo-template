@@ -59,10 +59,17 @@ file set is asserted, and every rendered `.toml`/`.json` is parsed. This
 template has no conditional paths, so that last part — `star.toml` parsing under
 both an empty and a populated `substrate_kind` — is the gate that matters.
 
-Reproduce it locally:
+Since 2026-08-12 a second matrix runs beside it —
+`template_update_matrix.py`, which gates the `copier update` path the render
+matrix cannot see — and this repo has its own pre-commit config that runs both.
+Install it and you get them for free; see
+[Development (on this template repo)](#development-on-this-template-repo).
+
+Reproduce either locally:
 
 ```bash
 python3 /path/to/foundry-stocks/ci/lib/template_render_matrix.py --template .
+python3 /path/to/foundry-stocks/ci/lib/template_update_matrix.py --template .
 ```
 
 ## Copier questions
@@ -109,10 +116,18 @@ see `copier.yml`):
 - **create-if-absent** — `README.md`, `LICENSE`, `main.tf`, `variables.tf`,
   `providers.tf`, `versions.tf`, `star.toml`: star-owned once born, copier
   never clobbers an existing one.
-- **3-way merge** — `.gitignore`: the one real seam.
-- **skipped here, clobbered by anneal** — `.forgejo/**`: the foundry
-  conformance surface is enforced by hephaestus anneal (C2) from a fresh
-  render, not merged by copier.
+- **skipped here, clobbered by anneal** — `.forgejo/**`, `cliff.toml`: the
+  foundry conformance surface is enforced by hephaestus anneal (C2) from a
+  fresh render, not merged by copier.
+- **3-way merge** — nothing. `.gitignore` was the last real seam and was
+  closed 2026-08-12; the only rendered path copier still rewrites is
+  `.copier-answers.yml`, which it owns (that is how the pin advances).
+
+So an update ADDS files a star has never had and rewrites none of its own. A
+change to a file this template ships therefore reaches only NEW stamps unless it
+ships with a versioned `_migrations` entry at the `after` stage — the only stage
+that runs once copier has reapplied its diff. A `_task` cannot do it; tasks run
+before the diff and are overwritten.
 
 `_tasks` (the numbered list above) never re-run on `copier update` — every
 one is gated `when: "{{ _copier_operation == 'copy' }}"`, so they only fire
@@ -120,9 +135,25 @@ on the first `copier copy`.
 
 ## Development (on this template repo)
 
-No build, test, or lint step — there's no Python/Node env (per `copier.yml`:
-"No uv/pyproject/pre-commit — there is no Python env"). Secret-scanning and
-schema conformance are validated in the *stamped* repo's own CI
+Install the hooks first — this repo has its own gate as of 2026-08-12, where
+before it gated only its children:
+
+```bash
+uvx pre-commit install
+```
+
+`pre-commit` checks the SOURCE repo (`copier.yml` as YAML, `ci-matrix.toml` as
+TOML, no committed conflict markers). `pre-push` runs the same two matrices CI
+runs — render and update — so a push that would red `template-ci` fails locally
+first. `template/` is excluded from the parsers on purpose: it is jinja source,
+not the rendered result. Parsing the RENDERED tree is the render matrix's job.
+
+Both matrices live in `foundry/foundry-stocks` so all five templates share one
+definition. Set `FOUNDRY_STOCKS` if your checkout is not at `../foundry-stocks`;
+absent, the hooks print a notice and pass, and CI enforces.
+
+There is still no Python/Node env for the *stamped* repo, and secret-scanning and
+schema conformance are validated in its own CI
 (`.forgejo/workflows/admit.yml`), not here.
 
 To iterate on the template itself: edit files under `template/`, then dry-run
