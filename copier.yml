@@ -161,3 +161,47 @@ _tasks:
   # Verify the plan-command override resolves as the project-tier winner.
   - command: specify preset resolve speckit.plan
     when: "{{ _copier_operation == 'copy' }}"
+
+_migrations:
+# ONE-OFF SWEEP for v0.3.1: carry the fixed cliff.toml release header to stars already born.
+#
+# `cliff.toml` is in `_skip_if_exists` above, so `copier update` will not deliver
+# this — a versioned migration is the mechanism this file already names for
+# exactly that case. It runs at the `after` stage, once copier has reapplied
+# its diff, which is why a `_task` cannot do it: tasks run BEFORE that.
+#
+# The old block shipped two defects (rob/python-repo-template#3143): it tagged
+# without moving the version literal, and its own documented invocation
+# `just release EXECUTE=1` silently dry-ran, because just reads NAME=value as a
+# variable assignment and the recipe PARAMETER kept its "0" default.
+#
+# EXACT-MATCH, NEVER A GUESS. The patch applies only if the star still carries
+# the old block byte-for-byte. A star that edited its own copy is REPORTED and
+# LEFT ALONE — this file's own standard is that "a merge silently guesses", and
+# a sweep that clobbers a local edit would be the same sin in a new coat.
+#
+# The payloads are base64 because this command is Jinja-rendered AND shell-
+# embedded AND Python-embedded; the old block contains `{{EXECUTE}}`, which
+# Jinja would otherwise eat. Regenerate with:
+#   git show <sha>:template/cliff.toml | python3 -c 'import base64,sys;print(base64.b64encode(sys.stdin.buffer.read()).decode())'
+  - version: v0.3.1
+    when: "{{ _stage == 'after' }}"
+    command: |
+      python3 - <<'SWEEP'
+      import base64, pathlib, sys
+      OLD = base64.b64decode("IyBDSEFOR0VMT0cubWQgaXMgREVSSVZFRC4gTmV2ZXIgaGFuZC1lZGl0IGl0LiBUaGlzIHRlbXBsYXRlIHNoaXBzIG5vIGp1c3RmaWxlLAojIHNvIHJlZ2VuZXJhdGUgd2l0aCB0aGUgY29tbWFuZCBkaXJlY3RseToKIyAgIHV2eCBnaXQtY2xpZmZAMi4xMy4xIC0tY29uZmlnIGNsaWZmLnRvbWwgLW8gQ0hBTkdFTE9HLm1kCiMgYW5kIHRhZyB3aXRoOgojICAgdXZ4IGdpdC1jbGlmZkAyLjEzLjEgLS1jb25maWcgY2xpZmYudG9tbCAtLWJ1bXAgLW8gQ0hBTkdFTE9HLm1kCiMgRW50cmllcyBjYXJyeSB0aGVpciBjb21taXQgc2hhIHJhdGhlciB0aGFuIHRoZSBjb21taXQgYm9keTogdGhlIHJhdGlvbmFsZSBpcwojIGFscmVhZHkgd3JpdHRlbiBpbiB0aGUgY29tbWl0LCBhbmQgYSBzZWNvbmQgY29weSBpcyBhIHNlY29uZCB0aGluZyB0byBkcmlmdC4=").decode()
+      NEW = base64.b64decode("IyBDSEFOR0VMT0cubWQgaXMgREVSSVZFRC4gTmV2ZXIgaGFuZC1lZGl0IGl0LiBUaGlzIHRlbXBsYXRlIHNoaXBzIG5vIGp1c3RmaWxlLAojIHNvIHJlZ2VuZXJhdGUgd2l0aCB0aGUgY29tbWFuZCBkaXJlY3RseToKIyAgIHV2eCBnaXQtY2xpZmZAMi4xMy4xIC0tY29uZmlnIGNsaWZmLnRvbWwgLW8gQ0hBTkdFTE9HLm1kCiMgYW5kIHRvIHJvbGwgdGhlIFtVbnJlbGVhc2VkXSBzZWN0aW9uIGludG8gdGhlIHZlcnNpb24gdGhlIGNvbW1pdHMgaW1wbHk6CiMgICB1dnggZ2l0LWNsaWZmQDIuMTMuMSAtLWNvbmZpZyBjbGlmZi50b21sIC0tYnVtcCAtbyBDSEFOR0VMT0cubWQKIyBFbnRyaWVzIGNhcnJ5IHRoZWlyIGNvbW1pdCBzaGEgcmF0aGVyIHRoYW4gdGhlIGNvbW1pdCBib2R5OiB0aGUgcmF0aW9uYWxlIGlzCiMgYWxyZWFkeSB3cml0dGVuIGluIHRoZSBjb21taXQsIGFuZCBhIHNlY29uZCBjb3B5IGlzIGEgc2Vjb25kIHRoaW5nIHRvIGRyaWZ0LgojCiMgTkVJVEhFUiBDT01NQU5EIFRBR1MsIGFuZCB5b3UgbXVzdCBub3QgdGFnIGJ5IGhhbmQg4oCUIHRoZSBoZWFkZXIgdXNlZCB0byBjYWxsCiMgdGhlIHNlY29uZCBvbmUgInRhZyB3aXRoIiwgd2hpY2ggaXQgbmV2ZXIgZGlkLiBBIHRvZnUgcmVwbyBjYXJyaWVzIG5vIHZlcnNpb24KIyBsaXRlcmFsLCBzbyB0aGUgb3VyZWEgZG9vciB0YWtlcyB0aGUgYnVtcCBpbXBsaWVkIGJ5IHRoZSBjb21taXQgdHlwZXMgYW5kCiMgbWludHMgcmVmcy90YWdzL3ZYLlkuWiBpdHNlbGYgd2hlbiB0aGUgbGFuZGluZyBtZXJnZXMuIFByZXZpZXcgd2hhdCBpdCB3aWxsCiMgY2hvb3NlIHdpdGggYC0tYnVtcGVkLXZlcnNpb25gOgojICAgdXZ4IGdpdC1jbGlmZkAyLjEzLjEgLS1jb25maWcgY2xpZmYudG9tbCAtLWJ1bXBlZC12ZXJzaW9u").decode()
+      p = pathlib.Path("cliff.toml")
+      if not p.exists():
+          print("copier: no cliff.toml here - nothing to sweep"); sys.exit(0)
+      t = p.read_text(encoding="utf-8")
+      if NEW in t:
+          print("copier: cliff.toml release header already carries the fix"); sys.exit(0)
+      if OLD not in t:
+          print("copier: cliff.toml release header is neither the old shipped block nor the new one -")
+          print("copier: LEAVING IT ALONE. Reconcile by hand against v0.3.1.")
+          sys.exit(0)
+      p.write_text(t.replace(OLD, NEW, 1), encoding="utf-8")
+      print("copier: swept the cliff.toml release header - neither command tags")
+      print("copier: the door mints the tag when the landing merges")
+      SWEEP
