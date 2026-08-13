@@ -8,10 +8,17 @@
 # CHANGELOG.md is DERIVED. Never hand-edit it. This template ships no justfile,
 # so regenerate with the command directly:
 #   uvx git-cliff@2.13.1 --config cliff.toml -o CHANGELOG.md
-# and tag with:
+# and to roll the [Unreleased] section into the version the commits imply:
 #   uvx git-cliff@2.13.1 --config cliff.toml --bump -o CHANGELOG.md
 # Entries carry their commit sha rather than the commit body: the rationale is
 # already written in the commit, and a second copy is a second thing to drift.
+#
+# NEITHER COMMAND TAGS, and you must not tag by hand — the header used to call
+# the second one "tag with", which it never did. A tofu repo carries no version
+# literal, so the ourea door takes the bump implied by the commit types and
+# mints refs/tags/vX.Y.Z itself when the landing merges. Preview what it will
+# choose with `--bumped-version`:
+#   uvx git-cliff@2.13.1 --config cliff.toml --bumped-version
 
 [changelog]
 header = """
